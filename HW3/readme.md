@@ -11,5 +11,4 @@
 
 3.  流程圖
 ![流程表](流程表.JPG)
-[Google][]
-[Google]: http://google.com/
+[Google][http://google.com/]
