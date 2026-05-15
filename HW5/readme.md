@@ -33,15 +33,15 @@ $$\text{Price} = \frac{E[\text{payoff}]}{(1 + r/12)^{12T}}$$
 
 ```mermaid
 flowchart TD
-    A([匯入套件\nQuantLib / numpy / matplotlib]) --> B["輸入參數\nT、dt、σ、S₀、K\na（mean-reversion speed）\nforward_rate、timestep、num_paths"]
-    B --> C["建立 Hull-White 模型\nFlat Forward Curve\nHullWhiteProcess(spot_curve, a, σ)"]
-    C --> D["生成 num_paths 條短率路徑\nGaussianPathGenerator\n每條路徑含 timestep+1 個時步"]
-    D --> E["繪製短率模擬路徑圖\n（視覺化檢查）"]
-    E --> F["逐條路徑生成 GBM 股價\nμ = 對應時步短率\nS(t) = S₀×exp((μ−σ²/2)t + σW(t))"]
-    F --> G["計算每條路徑到期損益\nCall payoff = max(S_T − K, 0)\nPut payoff  = max(K − S_T, 0)"]
-    G --> H["取 payoff 期望值\nE[Call], E[Put]"]
-    H --> I["折現至現值\nPrice = E[payoff] / (1 + r/12)^(12T)"]
-    I --> J(["Print Call Price & Put Price"])
+    A([匯入套件\nQuantLib / numpy / matplotlib]) --> B[輸入參數\nT、σ、S₀、K、a\nforward_rate、timestep、num_paths]
+    B --> C[建立 Hull-White 模型\nFlat Forward Curve\nGaussianPathGenerator]
+    C --> D[模擬 num_paths 條短率路徑\n每條含 timestep+1 個時步]
+    D --> E[繪製短率模擬路徑圖\n視覺化檢查]
+    E --> F[以短率作為漂移項\n代入幾何布朗運動\n模擬對應股價路徑]
+    F --> G[計算每條路徑的到期損益\nCall 與 Put 分別取 max]
+    G --> H[對所有路徑取損益期望值]
+    H --> I[折現至現值]
+    I --> J([Print Call Price & Put Price])
 ```
 
 ## 使用方法

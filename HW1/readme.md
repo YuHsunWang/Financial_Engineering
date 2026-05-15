@@ -6,13 +6,17 @@
 
 ## 公式說明
 
-| 欄位 | 計算方式 |
-|------|---------|
-| 期數 | 年數 × 12（月數） |
-| 償還本金 | ceil(本金 / 總期數)；最後一期直接結清剩餘本金 |
-| 償還利息 | round(剩餘未還本金 × 年利率 / 12) |
-| 本金利息累計 | 歷期已償還本金 + 利息之總和 |
-| 剩餘未還本金 | 本金 − 已償還本金 |
+**每期償還本金**
+
+$$\text{payment} = \left\lceil \frac{p}{12t} \right\rceil \quad (\text{最後一期直接結清剩餘本金})$$
+
+**每期利息**
+
+$$\text{interest} = \text{round}\!\left( p_{\text{剩餘}} \times \frac{r}{12} \right)$$
+
+**剩餘未還本金**
+
+$$p_{\text{剩餘}} \leftarrow p_{\text{剩餘}} - \text{payment}$$
 
 ## 流程圖
 
@@ -20,15 +24,15 @@
 flowchart TD
     A([匯入套件\nmath / numpy / pandas]) --> B[設定參數\n本金 p、利率 r、期數 t]
     B --> C[初始化五個 List\n期數 / 償還本金 / 償還利息 / 累計 / 剩餘本金]
-    C --> D{開始迴圈\nfor month in 0..12t}
-    D --> E[計算利息\ninterest = p × r / 12]
+    C --> D{開始迴圈\n月份 0 → 12t-1}
+    D --> E[計算當期利息]
     E --> F{最後一期？}
-    F -- 是 --> G[payment = 剩餘本金 p\n結清]
-    F -- 否 --> H[payment = ceil 本金 / 總期數]
-    G --> I[更新 total、p\n寫入各 List]
+    F -- 是 --> G[本期還款額 = 剩餘本金\n一次結清]
+    F -- 否 --> H[本期還款額 = 無條件進位\n本金 / 總期數]
+    G --> I[更新累計金額與剩餘本金\n寫入各 List]
     H --> I
     I --> D
-    D -- 迴圈結束 --> J[將五個 List 轉成 DataFrame]
+    D -- 迴圈結束 --> J[將五個 List 組合成 DataFrame]
     J --> K([輸出還款時間表])
 ```
 

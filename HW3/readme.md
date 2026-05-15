@@ -27,13 +27,13 @@ $$\Delta = \frac{C_u - C_d}{S_u - S_d}, \quad B = \frac{u \cdot P_d - d \cdot P_
 ```mermaid
 flowchart TD
     A([匯入套件\nnumpy / scipy]) --> B[輸入參數\nS、u、d、r、X、n]
-    B --> C["計算 R 與風險中立機率 P\nR = e^r\nP = (R - d) / (u - d)"]
-    C --> D["建立 (n+1)×(n+1) 二維陣列\n正向填入股價樹與機率\nS[i][j] = S×u^(i-j)×d^j"]
-    D --> E["計算最後一期損益\nCall[n][j] = max(S[n][j] − X, 0)\nPut[n][j]  = max(X − S[n][j], 0)"]
-    E --> F["倒推法（i 從 n-1 反向至 0）\nCall[i][j] = (P×C_u + (1-P)×C_d) / R\nPut[i][j]  = (P×P_u + (1-P)×P_d) / R"]
-    F --> G["計算各節點避險比率 Δ\nΔ = (C_u - C_d) / (S_u - S_d)"]
-    G --> H["計算各節點債券倉位 B\nB = (u×P_d - d×P_u) / ((u-d)×R)"]
-    H --> I(["Print 股價樹（含機率）\nPrint 買權表（含 Δ）\nPrint 賣權表（含 B）"])
+    B --> C[計算連續複利因子 R\n與風險中立機率 P]
+    C --> D[正向建立股價二項樹\n同時計算各節點機率\n二項式定理]
+    D --> E[計算到期損益\nCall 取 max 與 0\nPut 取 max 與 0]
+    E --> F[倒推法\ni 從 n-1 反向推回 0\n計算 Call 與 Put 價格樹]
+    F --> G[計算各節點避險比率 Δ]
+    G --> H[計算各節點債券倉位 B]
+    H --> I([Print 股價樹 / 買權表 / 賣權表])
 ```
 
 ## 使用方法

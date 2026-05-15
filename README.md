@@ -28,15 +28,15 @@
 flowchart TD
     A([匯入套件\nmath / numpy / pandas]) --> B[設定參數\n本金 p、利率 r、期數 t]
     B --> C[初始化五個 List\n期數 / 償還本金 / 償還利息 / 累計 / 剩餘本金]
-    C --> D{開始迴圈\nfor month in 0..12t}
-    D --> E[計算利息\ninterest = p × r / 12]
+    C --> D{開始迴圈\n月份 0 → 12t-1}
+    D --> E[計算當期利息]
     E --> F{最後一期？}
-    F -- 是 --> G[payment = 剩餘本金 p\n結清]
-    F -- 否 --> H[payment = ceil 本金 / 總期數]
-    G --> I[更新 total、p\n寫入各 List]
+    F -- 是 --> G[本期還款額 = 剩餘本金\n一次結清]
+    F -- 否 --> H[本期還款額 = 無條件進位\n本金 / 總期數]
+    G --> I[更新累計金額與剩餘本金\n寫入各 List]
     H --> I
     I --> D
-    D -- 迴圈結束 --> J[將五個 List 轉成 DataFrame]
+    D -- 迴圈結束 --> J[將五個 List 組合成 DataFrame]
     J --> K([輸出還款時間表])
 ```
 
@@ -61,18 +61,18 @@ flowchart TD
 ```mermaid
 flowchart TD
     A([匯入套件\npandas / numpy / sympy]) --> B[輸入參數\nBond Price、Par Value\nCoupon Rate、Maturity、Payment]
-    B --> C[計算每期付息\nPMT = Par × Coupon / Payment]
-    C --> D["利用等比級數公式建立方程式\nBond_Price = Σ PMT/(1+YTM)^t + Par/(1+YTM)^n"]
-    D --> E["sympy solve() 求 YTM\n篩選正實數解"]
+    B --> C[計算每期付息 PMT]
+    C --> D[以等比級數化簡折現公式\n建立 YTM 方程式]
+    D --> E[sympy solve 求根\n篩選正實數解]
     E --> F([輸出 YTM])
 
-    B --> G["Bootstrap 求 Spot Rate"]
-    G --> H["期 1：(PMT + Par) / (1 + S₁) = Price\nsolve() 求 S₁"]
-    H --> I["期 2：PMT/(1+S₁) + (PMT+Par)/(1+S₂)² = Price\nsolve() 求 S₂"]
+    C --> G[Bootstrap 逐期求 Spot Rate]
+    G --> H[第 1 期：單期折現方程式\nsolve 求 S₁]
+    H --> I[第 2 期：代入 S₁ 建立方程式\nsolve 求 S₂]
     I --> J[依此類推至第 n 期]
     J --> K([輸出 Spot Rate 列表])
 
-    K --> L["計算 Forward Rate\nf(0,1) = S(1)\nf(0,2) = S(2)\nf(1,2) = S(2)/S(1)  ..."]
+    K --> L[由相鄰 Spot Rate 推算\n各期 Forward Rate]
     L --> M([輸出 Forward Rate])
 ```
 
@@ -89,13 +89,13 @@ flowchart TD
 ```mermaid
 flowchart TD
     A([匯入套件\nnumpy / scipy]) --> B[輸入參數\nS、u、d、r、X、n]
-    B --> C["計算 R 與風險中立機率 P\nR = e^r\nP = (R - d) / (u - d)"]
-    C --> D["建立股價樹（正向）\nS[i][j] = S × u^(i-j) × d^j\n同時計算各節點機率（二項式定理）"]
-
-    D --> E["計算最後一期損益\nCall[n][j] = max(S[n][j] - X, 0)\nPut[n][j]  = max(X - S[n][j], 0)"]
-    E --> F["倒推法（Backward-induction）\nCall[i][j] = (P×C_u + (1-P)×C_d) / R\nPut[i][j]  = (P×P_u + (1-P)×P_d) / R"]
-    F --> G["計算避險比率 Δ 與債券倉位 B\nΔ = (C_u - C_d) / (S_u - S_d)\nB = (u×P_d - d×P_u) / ((u-d)×R)"]
-    G --> H(["Print 股價樹（含機率）\nPrint 買權表（含 Δ）\nPrint 賣權表（含 B）"])
+    B --> C[計算連續複利因子 R\n與風險中立機率 P]
+    C --> D[正向建立股價二項樹\n同時計算各節點機率\n二項式定理]
+    D --> E[計算到期損益\nCall 與 Put 各取 max 與 0]
+    E --> F[倒推法\ni 從 n-1 反向推回 0\n計算 Call 與 Put 價格樹]
+    F --> G[計算各節點避險比率 Δ]
+    G --> H[計算各節點債券倉位 B]
+    H --> I([Print 股價樹 / 買權表 / 賣權表])
 ```
 
 **輸出範例（買權，節點格式：價格（Δ））：**
@@ -119,13 +119,14 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A([匯入套件\nscipy / pandas / numpy]) --> B["輸入參數\nS（股價）、K（履約價）\ndividend_list、dividend_month\nsigma（波動度）、r（利率）、due（到期月數）"]
-    B --> C["計算股利現值 D\nD = Σ dᵢ × e^(−r × tᵢ)\n（以 zip 遍歷金額與月份）"]
-    C --> D["調整股價\nŜ = S − D"]
-    D --> E["計算 d₁ 與 d₂\nd₁ = [ln(Ŝ/K) + (r + σ²/2)×T] / (σ√T)\nd₂ = d₁ − σ√T"]
-    E --> F["查常態分佈 CDF\nN(d₁), N(d₂), N(−d₁), N(−d₂)"]
-    F --> G["代入 BS 公式\nCall = Ŝ×N(d₁) − K×e^(−rT)×N(d₂)\nPut  = K×e^(−rT)×N(−d₂) − Ŝ×N(−d₁)"]
-    G --> H(["Print Call & Put 價格"])
+    A([匯入套件\nscipy / pandas / numpy]) --> B[輸入參數\nS、K、dividend_list\ndividend_month、sigma、r、due]
+    B --> C[zip 遍歷股利金額與月份\n計算各筆現值並加總得 D]
+    C --> D[從股價扣除股利現值\n得調整後股價 S_hat]
+    D --> E[計算 d₁]
+    E --> F[計算 d₂]
+    F --> G[查標準常態分佈 CDF\n取得四個累積機率值]
+    G --> H[代入 Black-Scholes 公式\n計算 Call 與 Put]
+    H --> I([Print Call & Put 價格])
 ```
 
 **輸出：**
@@ -144,14 +145,15 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A([匯入套件\nQuantLib / numpy / matplotlib]) --> B["輸入參數\nT、dt、σ、S₀、K\na（mean-reversion）、forward_rate\ntimestep、num_paths"]
-    B --> C["建立 Hull-White 模型\n設定 flat forward curve\n初始化 HullWhiteProcess"]
-    C --> D["生成 num_paths 條短率路徑\n每條路徑長度 = timestep + 1"]
-    D --> E["以短率路徑作為 μ\n代入 GBM 生成股價路徑\nS(t) = S₀ × exp((μ − σ²/2)t + σW(t))"]
-    E --> F["計算每條路徑的到期損益\nCall payoff = max(S_T − K, 0)\nPut payoff  = max(K − S_T, 0)"]
-    F --> G["取 payoff 期望值\nE[Call payoff]、E[Put payoff]"]
-    G --> H["折現至現值\nPrice = E[payoff] / (1 + r/12)^(12T)"]
-    H --> I(["Print Call Price & Put Price"])
+    A([匯入套件\nQuantLib / numpy / matplotlib]) --> B[輸入參數\nT、σ、S₀、K、a\nforward_rate、timestep、num_paths]
+    B --> C[建立 Hull-White 模型\nFlat Forward Curve\nGaussianPathGenerator]
+    C --> D[模擬 num_paths 條短率路徑\n每條含 timestep+1 個時步]
+    D --> E[繪製短率模擬路徑圖\n視覺化檢查]
+    E --> F[以短率作為漂移項\n代入幾何布朗運動\n模擬對應股價路徑]
+    F --> G[計算每條路徑的到期損益\nCall 與 Put 分別取 max]
+    G --> H[對所有路徑取損益期望值]
+    H --> I[折現至現值]
+    I --> J([Print Call Price & Put Price])
 ```
 
 **輸出：**

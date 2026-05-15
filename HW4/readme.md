@@ -28,14 +28,14 @@ $$\text{Put} = K \cdot e^{-rT} \cdot N(-d_2) - \hat{S} \cdot N(-d_1)$$
 
 ```mermaid
 flowchart TD
-    A([匯入套件\nscipy / pandas / numpy]) --> B["輸入參數\nS（股價）、K（履約價）\ndividend_list（股利金額列表）\ndividend_month（發放月份列表）\nsigma（波動度）、r（利率）、due（到期月數）"]
-    B --> C["以 zip 遍歷股利金額與月份\n計算各筆股利現值並加總\nD = Σ dᵢ × e^(−r × tᵢ/12)"]
-    C --> D["調整股價\nŜ = S − D"]
-    D --> E["計算 d₁\nd₁ = [ln(Ŝ/K) + (r + σ²/2)×T] / (σ√T)"]
-    E --> F["計算 d₂\nd₂ = d₁ − σ√T"]
-    F --> G["查常態分佈 CDF\nN(d₁), N(d₂), N(−d₁), N(−d₂)"]
-    G --> H["代入 BS 公式\nCall = Ŝ×N(d₁) − Ke^(−rT)×N(d₂)\nPut  = Ke^(−rT)×N(−d₂) − Ŝ×N(−d₁)"]
-    H --> I(["Print Call 與 Put 價格"])
+    A([匯入套件\nscipy / pandas / numpy]) --> B[輸入參數\nS、K、dividend_list\ndividend_month、sigma、r、due]
+    B --> C[zip 遍歷股利金額與月份\n計算各筆現值並加總得 D]
+    C --> D[從股價扣除股利現值\n得調整後股價 S_hat]
+    D --> E[計算 d₁]
+    E --> F[計算 d₂]
+    F --> G[查標準常態分佈 CDF\n取得 N_d1 / N_d2 / N_neg_d1 / N_neg_d2]
+    G --> H[代入 Black-Scholes 公式\n計算 Call 與 Put]
+    H --> I([Print Call 與 Put 價格])
 ```
 
 ## 使用方法

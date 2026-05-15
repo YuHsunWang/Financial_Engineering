@@ -27,19 +27,19 @@ $$f(0,1) = S(1), \quad f(0,2) = S(2), \quad f(1,2) = \frac{S(2)}{S(1)}, \quad \c
 ```mermaid
 flowchart TD
     A([匯入套件\npandas / numpy / sympy]) --> B[輸入參數\nBond Price、Par Value\nCoupon Rate、Maturity、Payment]
-    B --> C[計算每期付息\nPMT = Par × Coupon / Payment]
+    B --> C[計算每期付息 PMT]
 
-    C --> D["建立 YTM 方程式\n等比級數化簡折現公式"]
-    D --> E["sympy solve() 求根\n篩選正實數解 → YTM"]
+    C --> D[以等比級數化簡折現公式\n建立 YTM 方程式]
+    D --> E[sympy solve 求根\n篩選正實數解]
     E --> F([輸出 YTM])
 
-    C --> G[Bootstrap 求 Spot Rate]
-    G --> H["期 1：solve() 求 S₁\n(PMT + Par) / (1 + S₁) = Price"]
-    H --> I["期 2：solve() 求 S₂\nPMT/(1+S₁) + (PMT+Par)/(1+S₂)² = Price"]
+    C --> G[Bootstrap 逐期求 Spot Rate]
+    G --> H[第 1 期：單期折現方程式\nsolve 求 S₁]
+    H --> I[第 2 期：代入 S₁ 建立方程式\nsolve 求 S₂]
     I --> J[依此類推至第 n 期]
     J --> K([輸出 Spot Rate 列表])
 
-    K --> L["計算 Forward Rate\nf(1,2) = S(2)/S(1)\nf(2,3) = S(3)/S(2)  ..."]
+    K --> L[由相鄰 Spot Rate 推算\n各期 Forward Rate]
     L --> M([輸出 Forward Rate])
 ```
 
